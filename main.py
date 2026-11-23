@@ -105,7 +105,7 @@ class OctofyApp(App):
             self.user = result.get("user", {})
             Clock.schedule_once(lambda dt: self.show_home(), 0)
         except Exception as e:
-            Clock.schedule_once(lambda dt: self.show_auth(str(e)), 0)
+            Clock.schedule_once(lambda dt, err=str(e): self.show_auth(err), 0)
 
     def show_home(self):
         self.current_chat = None
@@ -151,7 +151,7 @@ class OctofyApp(App):
                 rows.append((cid,title,preview))
             Clock.schedule_once(lambda dt: self._draw_chats(rows), 0)
         except Exception as e:
-            Clock.schedule_once(lambda dt: self.toast(str(e)), 0)
+            Clock.schedule_once(lambda dt, err=str(e): self.toast(err), 0)
 
     def _draw_chats(self, rows):
         if not hasattr(self,"chat_list") or self.current_chat: return
@@ -181,7 +181,7 @@ class OctofyApp(App):
             cid = result if isinstance(result,str) else result
             Clock.schedule_once(lambda dt: self.open_chat(str(cid), "@"+username),0)
         except Exception as e:
-            Clock.schedule_once(lambda dt: self.toast(str(e)),0)
+            Clock.schedule_once(lambda dt, err=str(e): self.toast(err),0)
 
     def open_chat(self, cid, title):
         self.current_chat = cid
