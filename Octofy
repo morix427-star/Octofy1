@@ -1,0 +1,427 @@
+
+from kivy.app import App
+from kivy.metrics import dp
+from kivy.core.window import Window
+from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.floatlayout import FloatLayout
+from kivy.uix.label import Label
+from kivy.uix.button import Button
+from kivy.uix.textinput import TextInput
+from kivy.uix.scrollview import ScrollView
+from kivy.uix.popup import Popup
+from kivy.graphics import Color, RoundedRectangle
+
+
+Window.clearcolor = (0.025, 0.025, 0.03, 1)
+
+
+class Panel(BoxLayout):
+    def __init__(self, color=(0.09, 0.09, 0.10, 1),
+                 radius=18, **kwargs):
+        super().__init__(**kwargs)
+        self.bg_color = color
+        self.radius = radius
+        with self.canvas.before:
+            Color(*self.bg_color)
+            self.rect = RoundedRectangle(
+                pos=self.pos,
+                size=self.size,
+                radius=[dp(radius)]
+            )
+        self.bind(pos=self.update_rect, size=self.update_rect)
+
+    def update_rect(self, *args):
+        self.rect.pos = self.pos
+        self.rect.size = self.size
+
+
+def make_label(text, size=16, color=(1, 1, 1, 1),
+               bold=False, **kwargs):
+    return Label(
+        text=text,
+        font_size=sp(size),
+        color=color,
+        bold=bold,
+        halign="left",
+        valign="middle",
+        **kwargs
+    )
+
+
+from kivy.metrics import sp
+
+
+class OctofyApp(App):
+
+    def build(self):
+        self.title = "Octofy"
+        self.messages = {
+            "Мария": ["Привет! Как дела?"],
+            "Павел": ["Привет! Как тебе Octofy?"],
+            "Noti": ["Добро пожаловать в Octofy!"]
+        }
+
+        self.chats = [
+            ("М", "Мария", "Скинула макеты, посмотри 👀", "08:43", "1"),
+            ("П", "Павел", "Привет! Как тебе Octofy?", "08:41", "1"),
+            ("N", "Noti", "Добро пожаловать в Octofy", "08:30", "2"),
+            ("Д", "Дизайн", "Новый дизайн готов!", "Вчера", "")
+        ]
+
+        self.root_box = BoxLayout(orientation="vertical",
+                                  spacing=dp(8),
+                                  padding=dp(12))
+
+        self.show_chats()
+        return self.root_box
+
+    def clear(self):
+        self.root_box.clear_widgets()
+
+    def header(self, title):
+        box = BoxLayout(size_hint_y=None, height=dp(65))
+        back = Button(
+            text="‹",
+            font_size=36,
+            size_hint_x=None,
+            width=dp(45),
+            background_normal="",
+            background_color=(0, 0, 0, 0)
+        )
+        back.bind(on_release=lambda x: self.show_chats())
+        box.add_widget(back)
+
+        box.add_widget(make_label(
+            title, 25, bold=True
+        ))
+
+        return box
+
+    def show_chats(self, *args):
+        self.clear()
+
+        top = BoxLayout(
+            orientation="vertical",
+            size_hint_y=None,
+            height=dp(115),
+            spacing=dp(3)
+        )
+
+        top.add_widget(make_label(
+            "OCTOFY", 15, (0.65, 0.65, 0.68, 1), True
+        ))
+
+        title_row = BoxLayout()
+        title_row.add_widget(make_label("Чаты", 32, bold=True))
+
+        search = Button(
+            text="⌕",
+            font_size=29,
+            size_hint_x=None,
+            width=dp(55),
+            background_normal="",
+            background_color=(0.15, 0.15, 0.17, 1)
+        )
+        search.bind(on_release=lambda x: self.search_popup())
+        title_row.add_widget(search)
+        top.add_widget(title_row)
+
+        self.root_box.add_widget(top)
+
+        scroll = ScrollView()
+        chat_list = BoxLayout(
+            orientation="vertical",
+            spacing=dp(9),
+            size_hint_y=None
+        )
+        chat_list.bind(minimum_height=chat_list.setter("height"))
+
+        for avatar, name, message, time, unread in self.chats:
+            row = Panel(
+                orientation="horizontal",
+                size_hint_y=None,
+                height=dp(82),
+                padding=dp(10),
+                spacing=dp(12)
+            )
+
+            av = Button(
+                text=avatar,
+                font_size=22,
+                bold=True,
+                size_hint=(None, None),
+                size=(dp(52), dp(52)),
+                background_normal="",
+                background_color=(0.27, 0.27, 0.29, 1)
+            )
+            av.bind(on_release=lambda x, n=name: self.open_chat(n))
+
+            info = BoxLayout(orientation="vertical")
+            info.add_widget(make_label(name, 17, bold=True))
+            info.add_widget(make_label(
+                message, 13, (0.65, 0.65, 0.68, 1)
+            ))
+
+            right = BoxLayout(
+                orientation="vertical",
+                size_hint_x=None,
+                width=dp(45)
+            )
+            right.add_widget(make_label(
+                time, 11, (0.55, 0.55, 0.58, 1)
+            ))
+            right.add_widget(make_label(
+                unread, 13, (1, 1, 1, 1), True
+            ))
+
+            row.add_widget(av)
+            row.add_widget(info)
+            row.add_widget(right)
+
+            # Open chat by tapping the row
+            row.bind(on_touch_down=
+                lambda obj, touch, n=name:
+                self.open_chat(n) if obj.collide_point(*touch.pos)
+                and not touch.is_mouse_scrolling else None
+            )
+
+            chat_list.add_widget(row)
+
+        scroll.add_widget(chat_list)
+        self.root_box.add_widget(scroll)
+
+        add = Button(
+            text="+",
+            font_size=32,
+            size_hint=(None, None),
+            size=(dp(58), dp(58)),
+            pos_hint={"right": 1},
+            background_normal="",
+            background_color=(1, 0.12, 0.32, 1)
+        )
+        add.bind(on_release=lambda x: self.new_chat())
+        self.root_box.add_widget(add)
+
+        self.navigation("Чаты")
+
+    def navigation(self, active):
+        nav = Panel(
+            orientation="horizontal",
+            size_hint_y=None,
+            height=dp(62),
+            padding=dp(5),
+            spacing=dp(4)
+        )
+
+        for name, symbol in [
+            ("Чаты", "●"),
+            ("Звонки", "☎"),
+            ("Профиль", "♙")
+        ]:
+            btn = Button(
+                text=symbol + "\n" + name,
+                font_size=13,
+                background_normal="",
+                background_color=(
+                    (0.32, 0.32, 0.34, 1)
+                    if active == name else
+                    (0, 0, 0, 0)
+                )
+            )
+
+            if name == "Чаты":
+                btn.bind(on_release=self.show_chats)
+            elif name == "Звонки":
+                btn.bind(on_release=self.show_calls)
+            else:
+                btn.bind(on_release=self.show_profile)
+
+            nav.add_widget(btn)
+
+        self.root_box.add_widget(nav)
+
+    def open_chat(self, name):
+        self.clear()
+
+        self.root_box.add_widget(self.header(name))
+
+        scroll = ScrollView()
+        self.chat_area = BoxLayout(
+            orientation="vertical",
+            spacing=dp(10),
+            padding=dp(8),
+            size_hint_y=None
+        )
+        self.chat_area.bind(
+            minimum_height=self.chat_area.setter("height")
+        )
+
+        scroll.add_widget(self.chat_area)
+        self.root_box.add_widget(scroll)
+
+        for msg in self.messages.get(name, []):
+            self.add_message(msg)
+
+        send_row = BoxLayout(
+            size_hint_y=None,
+            height=dp(55),
+            spacing=dp(7)
+        )
+
+        self.message_input = TextInput(
+            hint_text="Сообщение...",
+            multiline=False,
+            font_size=16,
+            foreground_color=(1, 1, 1, 1),
+            hint_text_color=(0.6, 0.6, 0.6, 1),
+            background_normal="",
+            background_active="",
+            background_color=(0.13, 0.13, 0.15, 1),
+            padding=[dp(14), dp(15)]
+        )
+
+        send = Button(
+            text="➤",
+            font_size=23,
+            size_hint_x=None,
+            width=dp(58),
+            background_normal="",
+            background_color=(1, 0.12, 0.32, 1)
+        )
+
+        send.bind(on_release=lambda x: self.send_message(name))
+
+        send_row.add_widget(self.message_input)
+        send_row.add_widget(send)
+        self.root_box.add_widget(send_row)
+
+    def add_message(self, text):
+        bubble = Panel(
+            orientation="vertical",
+            size_hint=(0.85, None),
+            height=dp(55),
+            padding=dp(12),
+            color=(0.18, 0.18, 0.20, 1)
+        )
+        bubble.add_widget(make_label(text, 15))
+        self.chat_area.add_widget(bubble)
+
+    def send_message(self, name):
+        text = self.message_input.text.strip()
+        if not text:
+            return
+
+        self.messages.setdefault(name, []).append(text)
+        self.message_input.text = ""
+        self.add_message(text)
+
+    def new_chat(self):
+        content = BoxLayout(
+            orientation="vertical",
+            padding=dp(15),
+            spacing=dp(12)
+        )
+
+        field = TextInput(
+            hint_text="Имя пользователя",
+            multiline=False,
+            size_hint_y=None,
+            height=dp(50)
+        )
+
+        create = Button(
+            text="Создать чат",
+            size_hint_y=None,
+            height=dp(48),
+            background_normal="",
+            background_color=(1, 0.12, 0.32, 1)
+        )
+
+        popup = Popup(
+            title="Новый чат",
+            content=content,
+            size_hint=(0.85, 0.35)
+        )
+
+        def create_chat(instance):
+            name = field.text.strip()
+            if name:
+                self.messages.setdefault(name, [])
+                self.chats.insert(
+                    0, ("О", name, "Новый чат", "Сейчас", "")
+                )
+                popup.dismiss()
+                self.open_chat(name)
+
+        create.bind(on_release=create_chat)
+        content.add_widget(field)
+        content.add_widget(create)
+        popup.open()
+
+    def search_popup(self):
+        content = BoxLayout(
+            orientation="vertical",
+            padding=dp(15),
+            spacing=dp(10)
+        )
+        field = TextInput(
+            hint_text="Поиск чата...",
+            multiline=False,
+            size_hint_y=None,
+            height=dp(50)
+        )
+        btn = Button(
+            text="Найти",
+            size_hint_y=None,
+            height=dp(45)
+        )
+        popup = Popup(
+            title="Поиск",
+            content=content,
+            size_hint=(0.85, 0.3)
+        )
+
+        def search(instance):
+            query = field.text.lower()
+            for chat in self.chats:
+                if query in chat[1].lower():
+                    popup.dismiss()
+                    self.open_chat(chat[1])
+                    return
+
+        btn.bind(on_release=search)
+        content.add_widget(field)
+        content.add_widget(btn)
+        popup.open()
+
+    def show_calls(self, *args):
+        self.clear()
+        self.root_box.add_widget(self.header("Звонки"))
+
+        self.root_box.add_widget(make_label(
+            "☎  Звонки\n\n"
+            "Здесь будут отображаться твои звонки.",
+            20
+        ))
+        self.navigation("Звонки")
+
+    def show_profile(self, *args):
+        self.clear()
+        self.root_box.add_widget(self.header("Профиль"))
+
+        self.root_box.add_widget(make_label(
+            "        OCTOFY\n\n"
+            "             ◉\n\n"
+            "       Пользователь\n"
+            "       @octofy_user\n\n"
+            "       Мой профиль\n"
+            "       Настройки\n"
+            "       Конфиденциальность\n"
+            "       О приложении",
+            19
+        ))
+        self.navigation("Профиль")
+
+
+if __name__ == "__main__":
+    OctofyApp().run()
