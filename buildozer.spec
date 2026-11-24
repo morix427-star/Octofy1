@@ -6,7 +6,8 @@ source.dir = .
 source.include_exts = py,kv,png,jpg,atlas
 version = 0.1.0
 requirements = python3==3.12.9,hostpython3==3.12.9,kivy,requests,urllib3,certifi,idna,charset_normalizer
-p4a.branch = master
+p4a.branch = develop
+p4a.commit = d2ee8c5
 orientation = portrait
 fullscreen = 0
 android.permissions = INTERNET,ACCESS_NETWORK_STATE
