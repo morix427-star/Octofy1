@@ -1,4 +1,4 @@
-name: Build Octofy APK
+name: Build Octofy Web APK
 on:
   workflow_dispatch:
 jobs:
