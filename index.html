@@ -157,8 +157,8 @@ button{cursor:pointer;border:0;background:none}
    НАСТРОЙКА: вставьте сюда URL проекта и ПУБЛИЧНЫЙ anon-ключ.
    service_role ключ сюда вставлять НЕЛЬЗЯ.
    ===================================================== */
-const SUPABASE_URL = "https://YOUR-PROJECT.supabase.co";
-const SUPABASE_ANON_KEY = "YOUR-ANON-KEY";
+const SUPABASE_URL = "https://yazpmmblkaqfqkvvunxx.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_mY06Ec-IvvHyk7DFYhwPpQ_xYmQIyPn";
 
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const $ = id => document.getElementById(id);
@@ -212,7 +212,7 @@ $("authForm").onsubmit = async e => {
     if(signUpMode){
       const username=$("aUser").value.trim().toLowerCase();
       if(!/^[a-z0-9_]{3,24}$/.test(username)) throw new Error("Имя: 3–24 символа, a-z, 0-9, _");
-      const {data,error}=await sb.auth.signUp({email,password,options:{data:{username,display_name:username}}});
+      const {data,error}=await sb.auth.signUp({email,password,options:{data:{username,display_name:username},emailRedirectTo:"https://morix427-star.github.io/Octofy1/"}});
       if(error) throw error;
       if(!data.session){ $("aErr").style.color="#a7f3d0"; $("aErr").textContent="Проверьте почту и подтвердите email, затем войдите."; setMode(false); }
     }else{
