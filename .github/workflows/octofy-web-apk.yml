@@ -1,6 +1,10 @@
 name: Build Octofy Web APK
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "icon.jpg"
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -18,7 +22,7 @@ jobs:
       - name: Prepare web files
         run: |
           mkdir -p octofy-app/www
-          cp index.html manifest.json sw.js icon.svg octofy-app/www/
+          cp index.html manifest.json sw.js icon.svg icon.jpg octofy-app/www/
       - name: Create Capacitor project
         working-directory: octofy-app
         run: |
@@ -32,7 +36,7 @@ jobs:
         working-directory: octofy-app
         run: |
           mkdir -p assets
-          rsvg-convert -w 1024 -h 1024 ../icon.svg -o assets/icon.png
+          cp ../icon.jpg assets/icon.png
           npm i -D @capacitor/assets
           npx capacitor-assets generate --android --iconBackgroundColor '#150f2e' --iconBackgroundColorDark '#150f2e'
       - name: Build APK
