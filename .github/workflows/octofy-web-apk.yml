@@ -13,6 +13,8 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
+      - name: Install SVG converter
+        run: sudo apt-get update && sudo apt-get install -y librsvg2-bin
       - name: Prepare web files
         run: |
           mkdir -p octofy-app/www
@@ -25,6 +27,14 @@ jobs:
           npx cap init Octofy com.octofy.app --web-dir=www
           npx cap add android
           npx cap sync android
+      - name: Generate app icon
+        continue-on-error: true
+        working-directory: octofy-app
+        run: |
+          mkdir -p assets
+          rsvg-convert -w 1024 -h 1024 ../icon.svg -o assets/icon.png
+          npm i -D @capacitor/assets
+          npx capacitor-assets generate --android --iconBackgroundColor '#150f2e' --iconBackgroundColorDark '#150f2e'
       - name: Build APK
         working-directory: octofy-app/android
         run: ./gradlew assembleDebug
