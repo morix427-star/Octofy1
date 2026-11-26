@@ -4,7 +4,8 @@ on:
   push:
     branches: [main]
     paths:
-      - "icon.jpg"
+      - "icon.svg"
+      - ".github/workflows/octofy-web-apk.yml"
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -31,12 +32,11 @@ jobs:
           npx cap init Octofy com.octofy.app --web-dir=www
           npx cap add android
           npx cap sync android
-      - name: Generate app icon
-        continue-on-error: true
+      - name: Generate square Android icon
         working-directory: octofy-app
         run: |
           mkdir -p assets
-          cp ../icon.jpg assets/icon.png
+          rsvg-convert -w 1024 -h 1024 ../icon.svg -o assets/icon.png
           npm i -D @capacitor/assets
           npx capacitor-assets generate --android --iconBackgroundColor '#150f2e' --iconBackgroundColorDark '#150f2e'
       - name: Build APK
